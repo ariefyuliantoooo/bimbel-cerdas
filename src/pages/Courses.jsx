@@ -44,6 +44,7 @@ const Courses = () => {
           {programs.map((p, idx) => (
             <motion.div
               key={idx}
+              initial={{ opacity: 1, y: 0 }}
               whileHover={{ y: -10 }}
               className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 flex flex-col h-full"
             >
