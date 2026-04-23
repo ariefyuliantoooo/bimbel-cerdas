@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Star, CheckCircle } from 'lucide-react';
+import { ArrowRight, Star, CheckCircle, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Hero = () => {
