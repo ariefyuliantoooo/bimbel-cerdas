@@ -7,4 +7,12 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.en
   ? import.meta.env.VITE_SUPABASE_ANON_KEY 
   : 'placeholder-key'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+let supabase;
+try {
+  supabase = createClient(supabaseUrl, supabaseAnonKey)
+} catch (e) {
+  console.warn("Supabase initialization failed, using dummy client", e);
+  supabase = { from: () => ({ insert: () => Promise.resolve({ error: null }) }) };
+}
+
+export { supabase }

@@ -56,6 +56,7 @@ const Features = () => {
           {features.map((f, idx) => (
             <motion.div
               key={idx}
+              initial={{ opacity: 1, y: 0 }}
               whileHover={{ y: -10 }}
               className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300"
             >
