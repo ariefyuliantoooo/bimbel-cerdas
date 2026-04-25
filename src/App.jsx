@@ -1,63 +1,46 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import FloatingWhatsApp from './components/FloatingWhatsApp';
-import Home from './pages/Home';
-import Courses from './pages/Courses';
-import Contact from './pages/Contact';
-import Rentals from './pages/Rentals';
-import Registration from './pages/Registration';
-import AdminLogin from './pages/admin/AdminLogin';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
-import { SettingsProvider } from './context/SettingsContext';
-import { AuthProvider } from './context/AuthContext';
-
-// Layout for public pages
-const PublicLayout = () => (
-  <div className="min-h-screen flex flex-col font-sans">
-    <Navbar />
-    <div className="flex-grow">
-      <Outlet />
-    </div>
-    <Footer />
-    <FloatingWhatsApp />
-  </div>
-);
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
+import HomePage from './pages/HomePage'
+import RentalPage from './pages/RentalPage'
+import DaftarPage from './pages/DaftarPage'
+import KontakPage from './pages/KontakPage'
+import LoginPage from './pages/LoginPage'
+import AdminPage from './pages/AdminPage'
+import Navbar from './components/Layout/Navbar'
+import Footer from './components/Layout/Footer'
+import WhatsAppButton from './components/Layout/WhatsAppButton'
 
 function App() {
-  return (
-    <AuthProvider>
-      <SettingsProvider>
-        <Router>
-          <Routes>
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route
-              path="/admin/dashboard/*"
-              element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
+  useEffect(() => {
+    document.title = "Bimbel Cerdas - Bimbel SD, Mengaji & Sewa Baju Adat"
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Bimbingan belajar berkualitas untuk SD, program mengaji gratis, dan penyewaan baju adat/profesi terlengkap di Batam.')
+    }
+  }, [])
 
-            {/* Public Routes */}
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/courses" element={<Courses />} />
-              <Route path="/rentals" element={<Rentals />} />
-              <Route path="/registration" element={<Registration />} />
-              <Route path="/contact" element={<Contact />} />
-              {/* Fallback route */}
-              <Route path="*" element={<Home />} />
-            </Route>
+  return (
+    <BrowserRouter>
+      <div className="flex flex-col min-h-screen">
+        <Toaster position="top-right" />
+        <Navbar />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/sewa-baju" element={<RentalPage />} />
+            <Route path="/daftar" element={<DaftarPage />} />
+            <Route path="/kontak" element={<KontakPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/admin/*" element={<AdminPage />} />
           </Routes>
-        </Router>
-      </SettingsProvider>
-    </AuthProvider>
-  );
+        </main>
+        <WhatsAppButton />
+        <Footer />
+      </div>
+    </BrowserRouter>
+  )
 }
 
-export default App;
+export default App
+
