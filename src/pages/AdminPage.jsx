@@ -742,21 +742,37 @@ const RegistrationsManager = () => {
 const SettingsManager = () => {
   const [settings, setSettings] = useState([])
   const [loading, setLoading] = useState(false)
+  const [localSettings, setLocalSettings] = useState({})
 
   const fetchData = async () => {
     const { data } = await supabase.from('settings').select('*')
     setSettings(data || [])
+    const map = {}
+    data?.forEach(s => map[s.key] = s.value)
+    setLocalSettings(map)
   }
 
   useEffect(() => { fetchData() }, [])
 
-  const handleUpdate = async (id, value) => {
-    await supabase.from('settings').update({ value }).eq('id', id)
-    toast.success('Pengaturan disimpan')
-    fetchData()
+  const handleSave = async (key) => {
+    setLoading(true)
+    const s = settings.find(item => item.key === key)
+    try {
+      if (s) {
+        await supabase.from('settings').update({ value: localSettings[key] }).eq('id', s.id)
+      } else {
+        await supabase.from('settings').insert([{ key, value: localSettings[key] }])
+      }
+      toast.success(`${key.replace('_', ' ')} disimpan`)
+      fetchData()
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const getSetting = (key) => settings.find(s => s.key === key) || { value: '', id: 0 }
+  const getSettingValue = (key) => localSettings[key] || ''
 
   return (
     <div className="animate-fade-in max-w-5xl">
@@ -773,16 +789,27 @@ const SettingsManager = () => {
               <ImageIcon className="text-indigo-600" /> Visual & Branding
             </h2>
             <div className="space-y-8">
-              <ImageUploader 
-                label="Background Hero (Beranda)" 
-                value={getSetting('hero_image').value} 
-                onChange={(url) => handleUpdate(getSetting('hero_image').id, url)}
-              />
-              <ImageUploader 
-                label="Logo Website" 
-                value={getSetting('logo_image')?.value} 
-                onChange={(url) => handleUpdate(getSetting('logo_image')?.id, url)}
-              />
+              <div className="space-y-4">
+                <ImageUploader 
+                  label="Background Hero (Beranda)" 
+                  value={getSettingValue('hero_image')} 
+                  onChange={(url) => setLocalSettings({...localSettings, hero_image: url})}
+                />
+                <button onClick={() => handleSave('hero_image')} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                  Simpan Foto Hero
+                </button>
+              </div>
+              
+              <div className="space-y-4 pt-6 border-t border-slate-50">
+                <ImageUploader 
+                  label="Logo Website" 
+                  value={getSettingValue('logo_image')} 
+                  onChange={(url) => setLocalSettings({...localSettings, logo_image: url})}
+                />
+                <button onClick={() => handleSave('logo_image')} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all">
+                  Simpan Logo
+                </button>
+              </div>
             </div>
           </div>
 
@@ -790,50 +817,59 @@ const SettingsManager = () => {
             <h2 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-2">
               <TrendingUp className="text-emerald-600" /> Biaya & Tarif
             </h2>
-            <div>
-              <label className="block text-sm font-bold mb-3 text-slate-700">Tarif SPP Bimbel / Bulan (Rp)</label>
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-400">Rp</span>
-                <input 
-                  type="number"
-                  defaultValue={getSetting('spp_price').value} 
-                  onBlur={(e) => handleUpdate(getSetting('spp_price').id, e.target.value)}
-                  className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 ring-emerald-500 font-black text-emerald-600"
-                />
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold mb-3 text-slate-700">Tarif SPP Bimbel / Bulan (Rp)</label>
+                <div className="relative">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 font-black text-slate-400">Rp</span>
+                  <input 
+                    type="number"
+                    value={getSettingValue('spp_price')} 
+                    onChange={(e) => setLocalSettings({...localSettings, spp_price: e.target.value})}
+                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 ring-emerald-500 font-black text-emerald-600"
+                  />
+                </div>
               </div>
+              <button onClick={() => handleSave('spp_price')} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">
+                Simpan Tarif SPP
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Contact & Socials */}
         <div className="bg-white p-10 rounded-5xl shadow-sm border border-slate-100 h-fit">
           <h2 className="text-xl font-black text-slate-800 mb-8 flex items-center gap-2">
             <Mail className="text-indigo-600" /> Kontak & Sosial Media
           </h2>
-          <div className="space-y-6">
+          <form onSubmit={(e) => { e.preventDefault(); toast.success('Klik tombol simpan pada masing-masing field'); }} className="space-y-6">
             {[
-              { key: 'wa_number', label: 'WhatsApp Utama', color: 'indigo' },
-              { key: 'wa_secondary', label: 'WhatsApp Cadangan', color: 'indigo' },
-              { key: 'email', label: 'Email Resmi', color: 'indigo' },
-              { key: 'facebook_url', label: 'Facebook URL', color: 'slate' },
-              { key: 'instagram_url', label: 'Instagram URL', color: 'slate' },
-              { key: 'youtube_url', label: 'YouTube URL', color: 'slate' },
-            ].map((field) => {
-              const s = getSetting(field.key)
-              if (!s.id && field.key !== 'wa_secondary') return null
-              return (
-                <div key={field.key}>
-                  <label className="block text-sm font-bold mb-2 text-slate-600">{field.label}</label>
+              { key: 'wa_number', label: 'WhatsApp Utama' },
+              { key: 'wa_secondary', label: 'WhatsApp Cadangan' },
+              { key: 'email', label: 'Email Resmi' },
+              { key: 'facebook_url', label: 'Facebook URL' },
+              { key: 'instagram_url', label: 'Instagram URL' },
+              { key: 'youtube_url', label: 'YouTube URL' },
+            ].map((field) => (
+              <div key={field.key} className="p-6 bg-slate-50 rounded-3xl border border-slate-100/50">
+                <label className="block text-sm font-black mb-3 text-slate-500 uppercase tracking-widest">{field.label}</label>
+                <div className="flex gap-3">
                   <input 
-                    defaultValue={s.value} 
-                    onBlur={(e) => handleUpdate(s.id, e.target.value)}
+                    value={getSettingValue(field.key)} 
+                    onChange={(e) => setLocalSettings({...localSettings, [field.key]: e.target.value})}
                     placeholder={`Masukkan ${field.label}...`}
-                    className="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 ring-indigo-500 font-bold text-slate-700"
+                    className="flex-1 px-5 py-4 rounded-2xl bg-white border border-slate-200 outline-none focus:ring-2 ring-indigo-500 font-bold text-slate-700"
                   />
+                  <button 
+                    type="button"
+                    onClick={() => handleSave(field.key)}
+                    className="px-6 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+                  >
+                    Simpan
+                  </button>
                 </div>
-              )
-            })}
-          </div>
+              </div>
+            ))}
+          </form>
         </div>
       </div>
     </div>
