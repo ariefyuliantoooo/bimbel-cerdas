@@ -35,9 +35,9 @@ CREATE TABLE settings (
 
 -- Insert default settings
 INSERT INTO settings (key, value) VALUES
-('wa_number', '+6285272123300'),
-('wa_secondary', '+6285765347621'),
-('email', 'ariefariefarief580@gmail.com'),
+('wa_number', '+6285765347621'),
+('wa_secondary', '+6285272123300'),
+('email', 'cahyantriwulandari87@gmail.com'),
 ('facebook_url', 'https://facebook.com/bimbelcerdas'),
 ('instagram_url', 'https://instagram.com/bimbelcerdas'),
 ('youtube_url', 'https://youtube.com/bimbelcerdas'),

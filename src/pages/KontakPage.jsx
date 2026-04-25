@@ -69,7 +69,7 @@ export default function KontakPage() {
               <p className="text-slate-500 font-medium mb-6">Tersedia via WhatsApp & Telepon</p>
               <div className="space-y-4">
                 <a href={`https://wa.me/${(settings.wa_number || '').replace(/\D/g, '')}`} className="block text-xl font-black text-slate-800 hover:text-indigo-600 transition-colors">
-                  {settings.wa_number || '+62 852 7212 3300'}
+                  {settings.wa_number || '+62 85765347621'}
                 </a>
                 <p className="text-sm font-bold text-slate-400">{settings.wa_secondary}</p>
               </div>
@@ -83,16 +83,12 @@ export default function KontakPage() {
               <p className="text-slate-500 font-medium mb-6">Waktu belajar & pelayanan</p>
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-slate-700">
-                  <span className="font-bold">Senin - Jumat</span>
+                  <span className="font-bold">Senin - kamis</span>
                   <span className="font-black">08:00 - 17:00</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-700">
-                  <span className="font-bold">Sabtu</span>
-                  <span className="font-black">09:00 - 15:00</span>
-                </div>
                 <div className="flex justify-between items-center text-rose-500">
-                  <span className="font-bold">Minggu</span>
-                  <span className="font-black">Libur</span>
+                  <span className="font-bold">jumat sabtu minggu</span>
+                  <span className="font-black">LIBUR</span>
                 </div>
               </div>
             </div>
@@ -104,9 +100,9 @@ export default function KontakPage() {
                 <p className="font-medium text-indigo-100 mb-8 leading-relaxed">
                   Kavling Bakau serip Blok G 3 RT 04 RW 02 SAMBAU NONGSA BATAM
                 </p>
-                <a 
-                  href="https://maps.google.com" 
-                  target="_blank" 
+                <a
+                  href="https://maps.google.com"
+                  target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-xl font-black hover:bg-yellow-400 hover:text-indigo-900 transition-all shadow-xl"
                 >
@@ -189,9 +185,8 @@ export default function KontakPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-5 rounded-2xl font-black text-white text-xl transition-all shadow-2xl flex items-center justify-center gap-4 active:scale-95 ${
-                    loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 transform hover:-translate-y-1'
-                  }`}
+                  className={`w-full py-5 rounded-2xl font-black text-white text-xl transition-all shadow-2xl flex items-center justify-center gap-4 active:scale-95 ${loading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 transform hover:-translate-y-1'
+                    }`}
                 >
                   {loading ? (
                     <div className="h-6 w-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -208,12 +203,12 @@ export default function KontakPage() {
 
         {/* Map Placeholder */}
         <div className="mt-20 rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white animate-fade-in">
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.043322137357!2d104.108422314753!3d1.1578139991553!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMDknMjguMSJOIDEwNMKwMDYnMzAuMyJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid" 
-            width="100%" 
-            height="450" 
-            style={{ border: 0 }} 
-            allowFullScreen="" 
+          <iframe
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.043322137357!2d104.108422314753!3d1.1578139991553!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMcKwMDknMjguMSJOIDEwNMKwMDYnMzAuMyJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid"
+            width="100%"
+            height="450"
+            style={{ border: 0 }}
+            allowFullScreen=""
             loading="lazy"
             title="Lokasi Bimbel Cerdas"
           ></iframe>

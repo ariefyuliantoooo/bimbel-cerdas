@@ -21,7 +21,7 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900 text-white pt-24 pb-12 overflow-hidden relative">
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600"></div>
-      
+
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
           <div className="space-y-8">
@@ -50,8 +50,8 @@ export default function Footer() {
             <ul className="space-y-4">
               {['Beranda', 'Sewa Baju', 'Pendaftaran', 'Hubungi Kami', 'Login Admin'].map((item, i) => (
                 <li key={i}>
-                  <Link 
-                    to={item === 'Beranda' ? '/' : item === 'Sewa Baju' ? '/sewa-baju' : item === 'Pendaftaran' ? '/daftar' : item === 'Hubungi Kami' ? '/kontak' : '/login'} 
+                  <Link
+                    to={item === 'Beranda' ? '/' : item === 'Sewa Baju' ? '/sewa-baju' : item === 'Pendaftaran' ? '/daftar' : item === 'Hubungi Kami' ? '/kontak' : '/login'}
                     className="text-slate-400 hover:text-white transition-colors font-bold flex items-center group"
                   >
                     <span className="h-1.5 w-0 bg-indigo-500 rounded-full group-hover:w-3 transition-all mr-0 group-hover:mr-3"></span>
@@ -114,4 +114,4 @@ export default function Footer() {
     </footer>
   )
 }
-
+
