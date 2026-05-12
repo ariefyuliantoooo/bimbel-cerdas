@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { CheckCircle2, Send, Phone, User, Mail, School, GraduationCap, BookOpen, Sparkles } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -24,8 +24,7 @@ export default function DaftarPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { error } = await supabase.from('registrations').insert([formData])
-      if (error) throw error
+      await api.createRegistration(formData)
       setSuccess(true)
       toast.success('Pendaftaran berhasil terkirim!')
       setFormData({

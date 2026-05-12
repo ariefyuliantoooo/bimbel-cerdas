@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { MessageCircle, PhoneCall } from 'lucide-react'
 
 export default function WhatsAppButton() {
@@ -8,9 +8,10 @@ export default function WhatsAppButton() {
 
   useEffect(() => {
     async function fetchSettings() {
-      const { data } = await supabase.from('settings').select('*').eq('key', 'wa_number').single()
-      if (data) {
-        setWaNumber(data.value.replace(/[^0-9]/g, ''))
+      const data = await api.getSettings()
+      const waSetting = data.find(s => s.key === 'wa_number')
+      if (waSetting) {
+        setWaNumber(waSetting.value.replace(/[^0-9]/g, ''))
       }
     }
     fetchSettings()

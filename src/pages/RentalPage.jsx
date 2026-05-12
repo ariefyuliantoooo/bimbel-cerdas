@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { Phone, Search, SlidersHorizontal, Package, Tag, ShoppingBag } from 'lucide-react'
 
 export default function RentalPage() {
@@ -14,18 +14,17 @@ export default function RentalPage() {
         setLoading(true)
         
         // Fetch WA Number
-        const { data: settings } = await supabase.from('settings').select('value').eq('key', 'wa_number').single()
-        setWaNumber(settings?.value || '6285272123300')
+        const settings = await api.getSettings()
+        const waSetting = settings.find(s => s.key === 'wa_number')
+        setWaNumber(waSetting?.value || '6285272123300')
 
         // Fetch Rentals
-        let query = supabase.from('rentals').select('*').eq('is_available', true)
+        const data = await api.getRentals()
+        let filteredData = data || []
         if (category !== 'all') {
-          query = query.eq('category', category)
+          filteredData = filteredData.filter(item => item.category === category)
         }
-
-        const { data, error } = await query
-        if (error) throw error
-        setRentals(data || [])
+        setRentals(filteredData)
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {

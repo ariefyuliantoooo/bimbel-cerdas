@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { Link } from 'react-router-dom'
 
 export default function HomePage() {
@@ -15,7 +15,7 @@ export default function HomePage() {
         setLoading(true)
         
         // Fetch Settings
-        const { data: settingsData } = await supabase.from('settings').select('*')
+        const settingsData = await api.getSettings()
         const settingsMap = {}
         settingsData?.forEach(item => {
           settingsMap[item.key] = item.value
@@ -23,25 +23,15 @@ export default function HomePage() {
         setSettings(settingsMap)
 
         // Fetch Services
-        const { data: servicesData } = await supabase
-          .from('services')
-          .select('*')
-          .eq('is_active', true)
+        const servicesData = await api.getServices()
         setServices(servicesData || [])
 
         // Fetch Testimonials
-        const { data: testimonialsData } = await supabase
-          .from('testimonials')
-          .select('*')
-          .eq('is_approved', true)
-          .limit(3)
+        const testimonialsData = await api.getTestimonials(3)
         setTestimonials(testimonialsData || [])
 
         // Fetch Team
-        const { data: teamData } = await supabase
-          .from('team')
-          .select('*')
-          .eq('is_active', true)
+        const teamData = await api.getTeam()
         setTeam(teamData || [])
 
       } catch (error) {

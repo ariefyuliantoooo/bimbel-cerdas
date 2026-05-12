@@ -1,12 +1,14 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { Menu, X, User } from 'lucide-react'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [logo, setLogo] = useState('')
+  const [showLogin, setShowLogin] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const location = useLocation()
 
   useEffect(() => {
@@ -15,11 +17,17 @@ export default function Navbar() {
     }
     window.addEventListener('scroll', handleScroll)
     
-    const fetchLogo = async () => {
-      const { data } = await supabase.from('settings').select('value').eq('key', 'logo_image').single()
-      if (data?.value) setLogo(data.value)
+    const fetchData = async () => {
+      const data = await api.getSettings()
+      const logoSetting = data.find(s => s.key === 'logo_image')
+      if (logoSetting?.value) setLogo(logoSetting.value)
+      
+      const showLoginSetting = data.find(s => s.key === 'show_login_button')
+      setShowLogin(showLoginSetting?.value !== 'false')
+      
+      setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true')
     }
-    fetchLogo()
+    fetchData()
 
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
@@ -39,8 +47,16 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-3 group">
-              {logo ? (
-                <img src={logo} alt="Logo" className="h-12 w-auto object-contain" />
+              {logo && logo !== '' ? (
+                <img 
+                  src={logo} 
+                  alt="Logo" 
+                  className="h-12 w-auto object-contain" 
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    setLogo('');
+                  }}
+                />
               ) : (
                 <div className="h-12 w-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg transform group-hover:rotate-12 transition-transform">
                   B
@@ -65,12 +81,14 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
-            <Link 
-              to="/login" 
-              className="ml-4 bg-slate-900 text-white px-7 py-3 rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-xl hover:shadow-indigo-200 transform hover:-translate-y-1 flex items-center gap-2"
-            >
-              <User size={18} /> Admin
-            </Link>
+            {showLogin && (
+              <Link 
+                to={isLoggedIn ? "/admin" : "/login"} 
+                className="ml-4 bg-slate-900 text-white px-7 py-3 rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-xl hover:shadow-indigo-200 transform hover:-translate-y-1 flex items-center gap-2"
+              >
+                <User size={18} /> {isLoggedIn ? 'Dashboard' : 'Admin'}
+              </Link>
+            )}
           </div>
           
           {/* Mobile Toggle */}
@@ -104,13 +122,15 @@ export default function Navbar() {
               {link.name}
             </Link>
           ))}
-          <Link 
-            to="/login" 
-            onClick={() => setIsOpen(false)}
-            className="block px-6 py-5 rounded-3xl font-black bg-slate-900 text-white text-center mt-6 shadow-xl"
-          >
-            Dashboard Admin
-          </Link>
+          {showLogin && (
+            <Link 
+              to={isLoggedIn ? "/admin" : "/login"} 
+              onClick={() => setIsOpen(false)}
+              className="block px-6 py-5 rounded-3xl font-black bg-slate-900 text-white text-center mt-6 shadow-xl"
+            >
+              {isLoggedIn ? 'Dashboard Admin' : 'Login Admin'}
+            </Link>
+          )}
         </div>
       </div>
     </nav>

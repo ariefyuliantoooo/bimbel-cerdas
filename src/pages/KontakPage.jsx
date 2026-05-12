@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { Phone, Mail, MapPin, Send, MessageSquare, Clock, ArrowRight } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -8,19 +8,23 @@ export default function KontakPage() {
   const [settings, setSettings] = useState({})
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
+    phone: '',
     subject: '',
     message: ''
   })
 
   useEffect(() => {
     async function fetchSettings() {
-      const { data } = await supabase.from('settings').select('*')
-      const settingsMap = {}
-      data?.forEach(item => {
-        settingsMap[item.key] = item.value
-      })
-      setSettings(settingsMap)
+      try {
+        const settingsData = await api.getSettings()
+        const settingsMap = {}
+        settingsData?.forEach(item => {
+          settingsMap[item.key] = item.value
+        })
+        setSettings(settingsMap)
+      } catch (error) {
+        console.error('Error fetching settings:', error)
+      }
     }
     fetchSettings()
   }, [])
@@ -33,10 +37,9 @@ export default function KontakPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      const { error } = await supabase.from('contacts').insert([formData])
-      if (error) throw error
+      await api.createContact(formData)
       toast.success('Pesan Anda telah terkirim!')
-      setFormData({ name: '', email: '', subject: '', message: '' })
+      setFormData({ name: '', phone: '', subject: '', message: '' })
     } catch (error) {
       toast.error('Gagal mengirim pesan: ' + error.message)
     } finally {
@@ -98,10 +101,10 @@ export default function KontakPage() {
               <div className="relative z-10">
                 <h3 className="text-2xl font-black mb-4">Lokasi Kami</h3>
                 <p className="font-medium text-indigo-100 mb-8 leading-relaxed">
-                  Kavling Bakau serip Blok G 3 RT 04 RW 02 SAMBAU NONGSA BATAM
+                  {settings.address || 'Kavling Bakau serip Blok G 3 RT 04 RW 02 SAMBAU NONGSA BATAM'}
                 </p>
                 <a
-                  href="https://maps.google.com"
+                  href={settings.google_maps_url || 'https://maps.app.goo.gl/PvGXkP35g8yUFQ64A?g_st=aw'}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 bg-white text-indigo-600 px-6 py-3 rounded-xl font-black hover:bg-yellow-400 hover:text-indigo-900 transition-all shadow-xl"
@@ -138,16 +141,16 @@ export default function KontakPage() {
                   </div>
                   <div className="space-y-3">
                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      Alamat Email
+                      <Phone size={14} /> Nomor WhatsApp
                     </label>
                     <input
-                      type="email"
-                      name="email"
+                      type="text"
+                      name="phone"
                       required
-                      value={formData.email}
+                      value={formData.phone}
                       onChange={handleChange}
                       className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white outline-none transition-all font-bold text-slate-700"
-                      placeholder="email@contoh.com"
+                      placeholder="+62 857..."
                     />
                   </div>
                 </div>

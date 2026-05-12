@@ -23,7 +23,7 @@ CREATE TABLE users (
 
 -- Insert admin (password: admin123)
 INSERT INTO users (username, password) VALUES 
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi');
+('admin', 'admin123');
 
 -- 2. TABEL SETTINGS (Pengaturan Website)
 CREATE TABLE settings (
@@ -42,6 +42,10 @@ INSERT INTO settings (key, value) VALUES
 ('instagram_url', 'https://instagram.com/bimbelcerdas'),
 ('youtube_url', 'https://youtube.com/bimbelcerdas'),
 ('spp_price', '100000'),
+('logo_image', ''),
+('show_login_button', 'true'),
+('address', 'Kavling Bakau serip Blok G 3 RT 04 RW 02 SAMBAU NONGSA BATAM'),
+('google_maps_url', 'https://maps.app.goo.gl/PvGXkP35g8yUFQ64A?g_st=aw'),
 ('hero_title', 'Bimbingan Belajar Berkualitas untuk Anak Anda'),
 ('hero_subtitle', 'Bimbel khusus SD, mengaji gratis, dan penyewaan baju adat/profesi untuk kebutuhan sekolah'),
 ('hero_image', '/images/hero-bg.jpg'),

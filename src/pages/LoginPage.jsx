@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { useNavigate } from 'react-router-dom'
-import { Lock, User, ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react'
+import { Lock, User, ArrowLeft, ShieldCheck, Sparkles, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
   const handleLogin = async (e) => {
@@ -15,31 +16,13 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // For demo purposes, we check against the provided credentials
-      if (username === 'admin' && password === 'admin123') {
+      const response = await api.login({ username, password })
+      if (response.success) {
         localStorage.setItem('isLoggedIn', 'true')
         toast.success('Selamat datang, Admin!')
         navigate('/admin')
       } else {
-        // Fallback check in database if user exists
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('username', username)
-          .single()
-
-        if (error || !data) {
-          throw new Error('Username atau password salah')
-        }
-        
-        // Simulating password check for demo
-        if (data.username === username && password === 'admin123') {
-           localStorage.setItem('isLoggedIn', 'true')
-           toast.success('Login Berhasil!')
-           navigate('/admin')
-        } else {
-           throw new Error('Username atau password salah')
-        }
+        throw new Error(response.message || 'Username atau password salah')
       }
     } catch (err) {
       toast.error(err.message)
@@ -89,16 +72,25 @@ export default function LoginPage() {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Lock size={14} /> Password
                 </label>
-                <a href="#" className="text-[10px] font-black text-indigo-600 uppercase hover:underline">Lupa?</a>
+                <a href="mailto:cahyantriwulandari87@gmail.com?subject=Reset Password Admin Bimbel Cerdas" className="text-[10px] font-black text-indigo-600 uppercase hover:underline">Lupa?</a>
               </div>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-6 py-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white outline-none transition-all font-bold text-slate-700"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-6 py-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white outline-none transition-all font-bold text-slate-700"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             <button

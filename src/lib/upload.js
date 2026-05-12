@@ -1,23 +1,23 @@
-import { supabase } from './supabase'
-
-export async function uploadImage(file, bucket = 'images') {
+export async function uploadImage(file) {
   if (!file) return null
 
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`
-  const filePath = `${fileName}`
+  const formData = new FormData()
+  formData.append('image', file)
 
-  const { error: uploadError } = await supabase.storage
-    .from(bucket)
-    .upload(filePath, file)
+  try {
+    const response = await fetch('http://localhost:5001/api/upload', {
+      method: 'POST',
+      body: formData,
+    })
 
-  if (uploadError) {
-    throw uploadError
+    if (!response.ok) {
+      throw new Error('Upload failed')
+    }
+
+    const data = await response.json()
+    return data.url
+  } catch (error) {
+    console.error('Error uploading image:', error)
+    throw error
   }
-
-  const { data } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(filePath)
-
-  return data.publicUrl
 }

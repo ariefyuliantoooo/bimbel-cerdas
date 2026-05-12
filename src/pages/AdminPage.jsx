@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { uploadImage } from '../lib/upload'
 import { 
   LayoutDashboard, 
@@ -22,7 +22,8 @@ import {
   Image as ImageIcon,
   ChevronRight,
   TrendingUp,
-  Clock
+  Clock,
+  Shield
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
@@ -114,26 +115,23 @@ const Dashboard = () => {
 
   useEffect(() => {
     async function fetchData() {
-      const [{ count: s }, { count: r }, { count: reg }, { count: m }, { count: t }, { count: ts }] = await Promise.all([
-        supabase.from('services').select('*', { count: 'exact', head: true }),
-        supabase.from('rentals').select('*', { count: 'exact', head: true }),
-        supabase.from('registrations').select('*', { count: 'exact', head: true }),
-        supabase.from('contacts').select('*', { count: 'exact', head: true }),
-        supabase.from('team').select('*', { count: 'exact', head: true }),
-        supabase.from('testimonials').select('*', { count: 'exact', head: true }),
-      ])
-      setStats({ services: s, rentals: r, registrations: reg, messages: m, team: t, testimonials: ts })
+      try {
+        const statsData = await api.getAdminStats()
+        setStats(statsData)
 
-      const { data: regs } = await supabase.from('registrations').select('*').order('created_at', { ascending: false }).limit(5)
-      setRecentRegs(regs || [])
+        const regs = await api.getRegistrations()
+        setRecentRegs(regs.slice(0, 5))
 
-      const { data: msgs } = await supabase.from('contacts').select('*').order('created_at', { ascending: false }).limit(5)
-      setRecentMsgs(msgs || [])
+        const msgs = await api.getContacts()
+        setRecentMsgs(msgs.slice(0, 5))
 
-      // Sample Chart Data (Monthly)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      const data = months.map(m => ({ name: m, count: Math.floor(Math.random() * 20) + 5 }))
-      setChartData(data)
+        // Sample Chart Data (Monthly)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const data = months.map(m => ({ name: m, count: Math.floor(Math.random() * 20) + 5 }))
+        setChartData(data)
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err)
+      }
     }
     fetchData()
   }, [])
@@ -154,16 +152,27 @@ const Dashboard = () => {
         <p className="text-slate-500 mt-2 font-medium">Selamat datang kembali, Admin Bimbel Cerdas.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-10">
-        {statCards.map((s, i) => (
-          <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className={`h-12 w-12 bg-${s.color}-50 text-${s.color}-600 rounded-2xl flex items-center justify-center mb-4`}>
-              <s.icon size={24} />
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-6 mb-10">
+        {statCards.map((s, i) => {
+          const colorMap = {
+            blue:    { bg: 'bg-blue-50',    text: 'text-blue-600' },
+            indigo:  { bg: 'bg-indigo-50',  text: 'text-indigo-600' },
+            emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600' },
+            amber:   { bg: 'bg-amber-50',   text: 'text-amber-600' },
+            purple:  { bg: 'bg-purple-50',  text: 'text-purple-600' },
+            rose:    { bg: 'bg-rose-50',    text: 'text-rose-600' },
+          }
+          const c = colorMap[s.color] || colorMap.blue
+          return (
+            <div key={i} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center">
+              <div className={`h-12 w-12 ${c.bg} ${c.text} rounded-2xl flex items-center justify-center mb-4`}>
+                <s.icon size={24} />
+              </div>
+              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">{s.label}</p>
+              <p className="text-3xl font-black text-slate-900">{s.value}</p>
             </div>
-            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">{s.label}</p>
-            <p className="text-3xl font-black text-slate-900">{s.value}</p>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -304,7 +313,7 @@ const ServicesManager = () => {
   const [editItem, setEditItem] = useState(null)
 
   const fetchData = async () => {
-    const { data } = await supabase.from('services').select('*').order('created_at', { ascending: false })
+    const data = await api.getServices()
     setItems(data || [])
   }
 
@@ -319,10 +328,10 @@ const ServicesManager = () => {
 
     try {
       if (editItem?.id) {
-        await supabase.from('services').update(payload).eq('id', editItem.id)
+        await api.updateService(editItem.id, payload)
         toast.success('Layanan diperbarui')
       } else {
-        await supabase.from('services').insert([payload])
+        await api.createService(payload)
         toast.success('Layanan ditambahkan')
       }
       setEditItem(null)
@@ -336,7 +345,7 @@ const ServicesManager = () => {
 
   const handleDelete = async (id) => {
     if (confirm('Yakin ingin menghapus layanan ini?')) {
-      await supabase.from('services').delete().eq('id', id)
+      await api.deleteService(id)
       toast.success('Layanan dihapus')
       fetchData()
     }
@@ -429,7 +438,7 @@ const RentalsManager = () => {
   const [editItem, setEditItem] = useState(null)
 
   const fetchData = async () => {
-    const { data } = await supabase.from('rentals').select('*').order('created_at', { ascending: false })
+    const data = await api.getRentals()
     setItems(data || [])
   }
 
@@ -451,10 +460,10 @@ const RentalsManager = () => {
       }
 
       if (editItem?.id) {
-        await supabase.from('rentals').update(payload).eq('id', editItem.id)
+        await api.updateRental(editItem.id, payload)
         toast.success('Baju diperbarui')
       } else {
-        await supabase.from('rentals').insert([payload])
+        await api.createRental(payload)
         toast.success('Baju baru ditambahkan')
       }
       
@@ -469,7 +478,7 @@ const RentalsManager = () => {
 
   const handleDelete = async (id) => {
     if (confirm('Yakin ingin menghapus koleksi baju ini?')) {
-      await supabase.from('rentals').delete().eq('id', id)
+      await api.deleteRental(id)
       toast.success('Koleksi dihapus')
       fetchData()
     }
@@ -610,16 +619,14 @@ const RegistrationsManager = () => {
   const [filter, setFilter] = useState('all')
 
   const fetchData = async () => {
-    let query = supabase.from('registrations').select('*').order('created_at', { ascending: false })
-    if (filter !== 'all') query = query.eq('status', filter)
-    const { data } = await query
+    const data = await api.getRegistrations(filter)
     setItems(data || [])
   }
 
   useEffect(() => { fetchData() }, [filter])
 
   const updateStatus = async (id, status) => {
-    await supabase.from('registrations').update({ status }).eq('id', id)
+    await api.updateRegistrationStatus(id, status)
     toast.success(`Status diubah ke ${status}`)
     fetchData()
   }
@@ -725,7 +732,7 @@ const RegistrationsManager = () => {
                   </select>
                 </td>
                 <td className="px-8 py-6 text-right">
-                  <button onClick={() => { if(confirm('Hapus pendaftaran ini?')) supabase.from('registrations').delete().eq('id', item.id).then(fetchData) }} className="h-10 w-10 text-rose-500 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-colors ml-auto">
+                  <button onClick={() => { if(confirm('Hapus pendaftaran ini?')) api.deleteRegistration(item.id).then(fetchData) }} className="h-10 w-10 text-rose-500 hover:bg-rose-50 rounded-xl flex items-center justify-center transition-colors ml-auto">
                     <Trash2 size={18} />
                   </button>
                 </td>
@@ -745,7 +752,7 @@ const SettingsManager = () => {
   const [localSettings, setLocalSettings] = useState({})
 
   const fetchData = async () => {
-    const { data } = await supabase.from('settings').select('*')
+    const data = await api.getSettings()
     setSettings(data || [])
     const map = {}
     data?.forEach(s => map[s.key] = s.value)
@@ -759,9 +766,7 @@ const SettingsManager = () => {
     const s = settings.find(item => item.key === key)
     try {
       if (s) {
-        await supabase.from('settings').update({ value: localSettings[key] }).eq('id', s.id)
-      } else {
-        await supabase.from('settings').insert([{ key, value: localSettings[key] }])
+        await api.updateSetting(s.id, localSettings[key])
       }
       toast.success(`${key.replace('_', ' ')} disimpan`)
       fetchData()
@@ -833,6 +838,21 @@ const SettingsManager = () => {
               <button onClick={() => handleSave('spp_price')} className="w-full py-4 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all">
                 Simpan Tarif SPP
               </button>
+
+              <div className="pt-6 border-t border-slate-50">
+                <label className="block text-sm font-bold mb-3 text-slate-700">Tampilkan Tombol Login di Navbar</label>
+                <select 
+                  value={getSettingValue('show_login_button')} 
+                  onChange={(e) => setLocalSettings({...localSettings, show_login_button: e.target.value})}
+                  className="w-full px-5 py-4 rounded-2xl bg-slate-50 border-none outline-none focus:ring-2 ring-indigo-500 font-bold"
+                >
+                  <option value="true">Tampilkan (Show)</option>
+                  <option value="false">Sembunyikan (Hide)</option>
+                </select>
+                <button onClick={() => handleSave('show_login_button')} className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm shadow-lg hover:bg-slate-800 transition-all">
+                  Simpan Pengaturan Login
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -846,6 +866,8 @@ const SettingsManager = () => {
               { key: 'wa_number', label: 'WhatsApp Utama' },
               { key: 'wa_secondary', label: 'WhatsApp Cadangan' },
               { key: 'email', label: 'Email Resmi' },
+              { key: 'address', label: 'Alamat Lengkap' },
+              { key: 'google_maps_url', label: 'Link Google Maps' },
               { key: 'facebook_url', label: 'Facebook URL' },
               { key: 'instagram_url', label: 'Instagram URL' },
               { key: 'youtube_url', label: 'YouTube URL' },
@@ -880,19 +902,19 @@ const SettingsManager = () => {
 const MessagesManager = () => {
   const [items, setItems] = useState([])
   const fetchData = async () => {
-    const { data } = await supabase.from('contacts').select('*').order('created_at', { ascending: false })
+    const data = await api.getContacts()
     setItems(data || [])
   }
   useEffect(() => { fetchData() }, [])
 
   const toggleRead = async (item) => {
-    await supabase.from('contacts').update({ is_read: !item.is_read }).eq('id', item.id)
+    await api.updateContactStatus(item.id, !item.is_read)
     fetchData()
   }
 
   const handleDelete = async (id) => {
     if (confirm('Hapus pesan ini?')) {
-      await supabase.from('contacts').delete().eq('id', id)
+      await api.deleteContact(id)
       toast.success('Pesan dihapus')
       fetchData()
     }
@@ -971,7 +993,7 @@ const TestimonialsManager = () => {
   const [editItem, setEditItem] = useState(null)
 
   const fetchData = async () => {
-    const { data } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false })
+    const data = await api.getTestimonials()
     setItems(data || [])
   }
 
@@ -989,8 +1011,8 @@ const TestimonialsManager = () => {
     }
 
     try {
-      if (editItem?.id) await supabase.from('testimonials').update(payload).eq('id', editItem.id)
-      else await supabase.from('testimonials').insert([payload])
+      if (editItem?.id) await api.updateTestimonial(editItem.id, payload)
+      else await api.createTestimonial(payload)
       toast.success('Testimoni disimpan')
       setEditItem(null); fetchData()
     } catch (err) { toast.error(err.message) }
@@ -1023,7 +1045,7 @@ const TestimonialsManager = () => {
               <p className="text-slate-500 text-sm italic mb-6">"{item.message}"</p>
               <div className="flex gap-3">
                 <button onClick={() => setEditItem(item)} className="text-indigo-600 font-bold text-xs hover:underline">Edit</button>
-                <button onClick={() => { if(confirm('Hapus?')) supabase.from('testimonials').delete().eq('id', item.id).then(fetchData) }} className="text-rose-500 font-bold text-xs hover:underline">Hapus</button>
+                <button onClick={() => { if(confirm('Hapus?')) api.deleteTestimonial(item.id).then(fetchData) }} className="text-rose-500 font-bold text-xs hover:underline">Hapus</button>
               </div>
             </div>
           </div>
@@ -1064,7 +1086,7 @@ const TeamManager = () => {
   const [editItem, setEditItem] = useState(null)
 
   const fetchData = async () => {
-    const { data } = await supabase.from('team').select('*').order('created_at', { ascending: false })
+    const data = await api.getTeam()
     setItems(data || [])
   }
 
@@ -1081,8 +1103,8 @@ const TeamManager = () => {
     }
 
     try {
-      if (editItem?.id) await supabase.from('team').update(payload).eq('id', editItem.id)
-      else await supabase.from('team').insert([payload])
+      if (editItem?.id) await api.updateTeamMember(editItem.id, payload)
+      else await api.createTeamMember(payload)
       toast.success('Data pengajar disimpan')
       setEditItem(null); fetchData()
     } catch (err) { toast.error(err.message) }
@@ -1107,7 +1129,7 @@ const TeamManager = () => {
             <p className="text-slate-400 text-xs font-medium mb-8 leading-relaxed line-clamp-2">{member.expertise}</p>
             <div className="flex gap-2">
               <button onClick={() => setEditItem(member)} className="flex-1 bg-slate-50 text-slate-500 py-3 rounded-xl font-bold text-xs hover:bg-indigo-50 hover:text-indigo-600 transition-colors">Edit</button>
-              <button onClick={() => { if(confirm('Hapus?')) supabase.from('team').delete().eq('id', member.id).then(fetchData) }} className="h-10 w-10 bg-slate-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-50 transition-colors"><Trash2 size={16} /></button>
+              <button onClick={() => { if(confirm('Hapus?')) api.deleteTeamMember(member.id).then(fetchData) }} className="h-10 w-10 bg-slate-50 text-rose-500 rounded-xl flex items-center justify-center hover:bg-rose-50 transition-colors"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
@@ -1136,5 +1158,6 @@ const TeamManager = () => {
     </div>
   )
 }
+
 
 
